@@ -18,7 +18,6 @@ export function SetupPastOrders() {
   if (!draft.shopping_for.trim()) return <Navigate to="/setup/who" replace />
 
   async function finish() {
-    if (!store) return
     setSaving(true)
     setError(null)
     try {

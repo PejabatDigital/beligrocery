@@ -10,32 +10,34 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. With no Supabase settings, the app runs in **local mode** (development only):
-sign-in is skipped, data is kept in this browser's localStorage, and pasted lists are read by the
-rule-based parser instead of Claude. Clear site data to start over as a new user.
+Open http://localhost:5173.
+
+There are no accounts and no server database. Everything is saved in this browser's localStorage,
+so data on your laptop and data on your phone are separate. Pasted lists are read by the rule-based
+reader. Clear site data, or use **History → Backup and settings → Erase everything**, to start over.
 
 `/dev/components` shows every component and design token.
 
-## Connect Supabase and Claude
+## Keeping your data safe
 
-1. **Supabase project** (free tier is fine)
-   - SQL editor → run [`supabase/migrations/20261003000000_init.sql`](supabase/migrations/20261003000000_init.sql)
-     (tables, row-level security, the `save_order` function).
-   - Authentication → Providers → Email: enabled (magic link).
-   - Authentication → URL configuration: Site URL `http://localhost:5173`, and add it to Redirect URLs.
-2. **Client settings**: copy `.env.example` to `.env.local` and fill in the project URL and anon key.
-3. **Function secrets**: copy `.dev.vars.example` to `.dev.vars` and fill in `ANTHROPIC_API_KEY`,
-   `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
-4. Run both the app and the Pages Function:
+The device holds the only copy. **History → Backup and settings → Save a backup** writes a JSON file
+(on a phone, the share sheet lets you send it to Files, Drive or WhatsApp). **Restore from a backup**
+is on the same screen and on Welcome, for moving to a new phone.
 
-   ```bash
-   npm run dev:all
-   ```
+On iPhone, add the site to the Home Screen: Safari clears data for sites that aren't installed after
+7 days without a visit.
 
-   Vite (5173) proxies `/api/*` to wrangler (8788). If the function is unreachable, the app falls back
-   to the rule-based parser and says so on Review order.
+## Optional: read lists with Claude
 
-Never put the Anthropic key or the Supabase service key in client code or `.env.local`.
+Off by default. To try it locally:
+
+1. Copy `.env.example` to `.env.local` and set `VITE_AI_PARSING=on`.
+2. Copy `.dev.vars.example` to `.dev.vars` and set `ANTHROPIC_API_KEY`.
+3. Run `npm run dev:all`. Vite (5173) proxies `/api/*` to wrangler (8788). If the function is
+   unreachable, the app falls back to the rule-based reader and says so on Review order.
+
+There's no sign-in, so a deployed `/api/parse-order` is open to anyone who finds it. Protect it before
+setting the key in production. Never put the Anthropic key in client code or `.env.local`.
 
 ## Scripts
 
@@ -43,7 +45,7 @@ Never put the Anthropic key or the Supabase service key in client code or `.env.
 |---|---|
 | `npm run dev` | Vite dev server |
 | `npm run dev:api` | Pages Functions under wrangler on port 8788 |
-| `npm run dev:all` | Both together |
+| `npm run dev:all` | Both together (only needed for AI reading) |
 | `npm test` | Vitest: predictions, parser, formatting |
 | `npm run build` | Type-check and build to `dist/` |
 | `npm run pages:deploy` | Build and deploy to Cloudflare Pages (milestone 6) |
@@ -53,9 +55,9 @@ Never put the Anthropic key or the Supabase service key in client code or `.env.
 | Path | |
 |---|---|
 | `src/lib/predict.ts` | Deterministic predictions (intervals, due items, reasons). Tested in `predict.test.ts`. |
-| `src/lib/parse-local.ts` | Rule-based list reader: "We spotted" preview, local mode and fallback. |
+| `src/lib/parse-local.ts` | Rule-based list reader: the default, the "We spotted" preview, and the AI fallback. |
 | `src/lib/parse-schema.ts` | Zod contract for `/api/parse-order`, shared by client and function. |
-| `src/lib/store/` | Data layer: Supabase, plus the dev-only local store. |
-| `functions/api/parse-order.ts` | Pages Function: auth, 30 reads/hour per user, Claude Haiku 4.5 with structured outputs. |
+| `src/lib/store/` | Data layer: localStorage, backup and restore. Tested in `local.test.ts`. |
+| `functions/api/parse-order.ts` | Optional Pages Function: Claude Haiku 4.5 with structured outputs. |
 | `src/components/` | The six Figma components plus layout pieces. |
 | `src/pages/` | Screens, grouped as in Figma: setup, home, log, orderday, history. |

@@ -1,11 +1,13 @@
 import { parseLocal } from './parse-local'
 import { parseResultSchema, type ParseResult } from './parse-schema'
-import type { Store } from './store'
 import type { CatalogueEntry } from './types'
 
 export class ParseError extends Error {}
 
 export type ParseOutcome = { result: ParseResult; usedAI: boolean }
+
+/** AI reading is off unless the build sets VITE_AI_PARSING=on (and the function has ANTHROPIC_API_KEY). */
+export const AI_ENABLED = import.meta.env.VITE_AI_PARSING === 'on'
 
 const MIN_READING_MS = 700
 
@@ -25,30 +27,28 @@ function reconcile(result: ParseResult, catalogue: CatalogueEntry[]): ParseResul
   }
 }
 
-async function parseRemote(store: Store, rawText: string, catalogue: CatalogueEntry[]): Promise<ParseResult> {
-  const token = await store.getAccessToken()
+async function parseRemote(rawText: string, catalogue: CatalogueEntry[]): Promise<ParseResult> {
   const res = await fetch('/api/parse-order', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ raw_text: rawText, catalogue }),
   })
-  if (res.status === 429) throw new ParseError("You've read a lot of lists this hour. Try again a bit later.")
   if (!res.ok) throw new Error(`parse-order ${res.status}`)
   return parseResultSchema.parse(await res.json())
 }
 
 /**
- * Read a pasted order. Uses the AI parser when Supabase is configured, otherwise (local mode)
- * the rule-based reader. If the API is unreachable, falls back to the rule-based reader too.
+ * Read a pasted order. Uses the AI parser when it's switched on, otherwise the rule-based reader.
+ * If the API is unreachable, falls back to the rule-based reader too.
  */
-export async function parseOrderText(store: Store, rawText: string, catalogue: CatalogueEntry[]): Promise<ParseOutcome> {
+export async function parseOrderText(rawText: string, catalogue: CatalogueEntry[]): Promise<ParseOutcome> {
   const started = Date.now()
   let outcome: ParseOutcome
-  if (store.mode === 'local') {
+  if (!AI_ENABLED) {
     outcome = { result: parseLocal(rawText, catalogue), usedAI: false }
   } else {
     try {
-      outcome = { result: reconcile(await parseRemote(store, rawText, catalogue), catalogue), usedAI: true }
+      outcome = { result: reconcile(await parseRemote(rawText, catalogue), catalogue), usedAI: true }
     } catch (e) {
       if (e instanceof ParseError) throw e
       console.warn('AI parsing unavailable, reading with rules instead', e)

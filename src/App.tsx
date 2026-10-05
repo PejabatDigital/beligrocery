@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { DataProvider } from './app/DataProvider'
-import { Gate, RequireProfile, RequireSession, RootRedirect } from './app/guards'
+import { Gate, RequireProfile, RootRedirect } from './app/guards'
 import { DevComponents } from './pages/DevComponents'
 import { History } from './pages/history/History'
 import { ItemDetail } from './pages/history/ItemDetail'
@@ -13,8 +13,8 @@ import { Draft } from './pages/orderday/Draft'
 import { SetupHowOften } from './pages/setup/SetupHowOften'
 import { SetupPastOrders } from './pages/setup/SetupPastOrders'
 import { SetupWho } from './pages/setup/SetupWho'
-import { SignIn } from './pages/setup/SignIn'
 import { Welcome } from './pages/setup/Welcome'
+import { Settings } from './pages/settings/Settings'
 
 export function App() {
   return (
@@ -28,12 +28,9 @@ export function App() {
               <Routes>
                 <Route index element={<RootRedirect />} />
                 <Route path="welcome" element={<Welcome />} />
-                <Route path="sign-in" element={<SignIn />} />
-                <Route element={<RequireSession />}>
-                  <Route path="setup/who" element={<SetupWho />} />
-                  <Route path="setup/how-often" element={<SetupHowOften />} />
-                  <Route path="setup/past-orders" element={<SetupPastOrders />} />
-                </Route>
+                <Route path="setup/who" element={<SetupWho />} />
+                <Route path="setup/how-often" element={<SetupHowOften />} />
+                <Route path="setup/past-orders" element={<SetupPastOrders />} />
                 <Route element={<RequireProfile />}>
                   <Route path="home" element={<Home />} />
                   <Route path="log" element={<LogOrder />} />
@@ -43,6 +40,7 @@ export function App() {
                   <Route path="history" element={<History />} />
                   <Route path="history/orders/:id" element={<OrderDetail />} />
                   <Route path="history/items/:id" element={<ItemDetail />} />
+                  <Route path="settings" element={<Settings />} />
                 </Route>
                 <Route path="*" element={<RootRedirect />} />
               </Routes>

@@ -5,7 +5,6 @@ export type ISODate = string
 
 export type Profile = {
   id: string
-  user_id: string
   shopping_for: string
   cadence_days: number
   created_at: string
@@ -13,7 +12,6 @@ export type Profile = {
 
 export type Item = {
   id: string
-  user_id: string
   canonical_name: string
   category: Category
   aliases: string[]
@@ -33,7 +31,6 @@ export type OrderItem = {
 
 export type Order = {
   id: string
-  user_id: string
   order_date: ISODate
   total_rm: number | null
   raw_text: string

@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_SUPABASE_URL?: string
-  readonly VITE_SUPABASE_ANON_KEY?: string
+  /** 'on' to read pasted lists with Claude via /api/parse-order. Anything else: rule-based only. */
+  readonly VITE_AI_PARSING?: string
 }
 
 interface ImportMeta {

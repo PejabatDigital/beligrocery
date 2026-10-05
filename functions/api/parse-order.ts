@@ -1,6 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
-import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { CATEGORIES } from '../../src/lib/categories'
 import { todayISO } from '../../src/lib/dates'
@@ -9,16 +8,16 @@ import { parseRequestSchema, parseResultSchema, type ParseResult } from '../../s
 
 // POST /api/parse-order
 // Reads a pasted WhatsApp order with Claude and returns strict JSON (see src/lib/parse-schema.ts).
-// Secrets: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_ANON_KEY (wrangler pages secret put / .dev.vars).
+// Optional: the app only calls this when built with VITE_AI_PARSING=on.
+// Secret: ANTHROPIC_API_KEY (wrangler pages secret put / .dev.vars). Without it, answers 503.
+// There's no sign-in, so this endpoint is open to anyone who finds it. Put access protection
+// in front of it before setting the key in production.
 
 type Env = {
-  ANTHROPIC_API_KEY: string
-  SUPABASE_URL: string
-  SUPABASE_ANON_KEY: string
+  ANTHROPIC_API_KEY?: string
 }
 
 const MODEL = 'claude-haiku-4-5-20251001'
-const REQUESTS_PER_HOUR = 30
 
 // What the model fills in. Kept free of numeric/regex constraints (not supported by structured
 // outputs); the stricter parseResultSchema validates afterwards.
@@ -77,39 +76,8 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 }
 
-/** Verify the Supabase session and count this request against the user's hourly limit. */
-async function authorize(request: Request, env: Env): Promise<Response | null> {
-  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
-  if (!token) return json({ error: 'Sign in required' }, 401)
-
-  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
-  const { data: user, error: userError } = await supabase.auth.getUser(token)
-  if (userError || !user.user) return json({ error: 'Sign in required' }, 401)
-
-  // Row-level security scopes both queries to this user.
-  const since = new Date(Date.now() - 3_600_000).toISOString()
-  const { count, error: countError } = await supabase
-    .from('parse_requests')
-    .select('id', { count: 'exact', head: true })
-    .gte('created_at', since)
-  if (countError) return json({ error: 'Could not check usage' }, 500)
-  if ((count ?? 0) >= REQUESTS_PER_HOUR) return json({ error: 'Too many requests' }, 429)
-
-  const { error: insertError } = await supabase.from('parse_requests').insert({})
-  if (insertError) return json({ error: 'Could not record usage' }, 500)
-  return null
-}
-
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  if (!env.ANTHROPIC_API_KEY || !env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
-    return json({ error: 'Parser not configured' }, 503)
-  }
-
-  const denied = await authorize(request, env)
-  if (denied) return denied
+  if (!env.ANTHROPIC_API_KEY) return json({ error: 'Parser not configured' }, 503)
 
   const input = parseRequestSchema.safeParse(await request.json().catch(() => null))
   if (!input.success) return json({ error: 'Invalid request' }, 400)

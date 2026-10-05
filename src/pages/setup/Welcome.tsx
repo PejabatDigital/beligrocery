@@ -1,25 +1,24 @@
-import { Navigate, useNavigate } from 'react-router-dom'
-import { Button } from '../../components/Button'
+import { Navigate } from 'react-router-dom'
+import { ButtonLink } from '../../components/Button'
 import { Screen } from '../../components/layout/Screen'
 import { useDataContext } from '../../app/DataProvider'
+import { RestoreButton } from '../settings/RestoreButton'
 
 // Figma: Setup › Welcome (4:4)
+// Not in Figma: "Restore from a backup", for moving to a new phone or browser.
 export function Welcome() {
-  const { state, store } = useDataContext()
-  const navigate = useNavigate()
+  const { state } = useDataContext()
   if (state.status === 'ready' && state.profile) return <Navigate to="/home" replace />
 
   return (
     <Screen
       footer={
         <>
-          <Button fullWidth onClick={() => navigate(state.status === 'ready' ? '/setup/who' : '/sign-in')}>
+          <ButtonLink to="/setup/who" fullWidth>
             Get started
-          </Button>
-          <p className="type-caption text-text-secondary">
-            Takes about a minute to set up.
-            {store?.mode === 'local' && ' Local mode: your data stays in this browser.'}
-          </p>
+          </ButtonLink>
+          <RestoreButton variant="ghost" />
+          <p className="type-caption text-text-secondary">Takes about a minute to set up. Everything stays on this device.</p>
         </>
       }
     >

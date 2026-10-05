@@ -85,6 +85,13 @@ export function History() {
       {orders.length > 0 && q && months.length === 0 && (
         <p className="type-body text-text-secondary">No orders with “{query.trim()}”.</p>
       )}
+
+      {!q && (
+        <section className="flex flex-col gap-lg">
+          <SectionLabel>This device</SectionLabel>
+          <ItemRow to="/settings" name="Backup and settings" meta="Your orders are saved on this device only" />
+        </section>
+      )}
     </Screen>
   )
 }

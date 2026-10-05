@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAppData } from '../../app/useAppData'
 import { Button } from '../../components/Button'
 import { CategoryChip } from '../../components/CategoryChip'
@@ -16,7 +16,8 @@ import { formatQuantity, formatRM, formatRMDelta, formatTrailing, formatWhatsApp
 // Figma: History › Order detail (7:124)
 export function OrderDetail() {
   const { id } = useParams()
-  const { orders, itemsById } = useAppData()
+  const { orders, itemsById, store, refresh } = useAppData()
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<Category | null>(null)
   const { show, toast } = useToast()
 
@@ -49,12 +50,29 @@ export function OrderDetail() {
     show((await copyText(text)) ? 'Copied' : "Couldn't copy")
   }
 
+  // Not in Figma: with no server, this is the only way to undo a wrongly logged order.
+  async function remove() {
+    if (!window.confirm(`Delete the order from ${formatDate(order.order_date)}? This can't be undone.`)) return
+    try {
+      await store.deleteOrder(order.id)
+      navigate('/history', { replace: true })
+      await refresh()
+    } catch (e) {
+      show(e instanceof Error ? e.message : "Couldn't delete")
+    }
+  }
+
   return (
     <Screen
       footer={
-        <Button variant="secondary" fullWidth onClick={copyList}>
-          Copy as list
-        </Button>
+        <>
+          <Button variant="secondary" fullWidth onClick={copyList}>
+            Copy as list
+          </Button>
+          <Button variant="ghost" fullWidth onClick={remove}>
+            Delete order
+          </Button>
+        </>
       }
     >
       <TopBar subtitle="Order" title={formatDate(order.order_date)} />

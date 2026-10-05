@@ -1,5 +1,3 @@
-# Copy to .dev.vars for `npm run dev:api`. Never commit .dev.vars.
-# In production set these with: npx wrangler pages secret put <NAME>
+# Only needed if VITE_AI_PARSING=on. Copy to .dev.vars for `npm run dev:api`. Never commit .dev.vars.
+# In production set it with: npx wrangler pages secret put ANTHROPIC_API_KEY
 ANTHROPIC_API_KEY=
-SUPABASE_URL=
-SUPABASE_ANON_KEY=

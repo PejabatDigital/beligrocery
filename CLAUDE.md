@@ -8,9 +8,9 @@ A grocery memory for someone you shop for from far away. You feed it orders, it 
 
 Core loop: **Log → Learn → Suggest.** Every feature serves this loop. If a feature doesn't, it waits.
 
-**Who it's for:** anyone who regularly orders groceries on behalf of someone else, such as a parent, grandparent, relative or neighbour. Typically they send a list to a local shop over WhatsApp, the shop delivers, and they pay online. The app is designed and built as a public product from day one.
+**Who it's for:** anyone who regularly orders groceries on behalf of someone else, such as a parent, grandparent, relative or neighbour. Typically they send a list to a local shop over WhatsApp, the shop delivers, and they pay online. **For now it's a personal app for one person (the owner), not a public product.** No accounts or sign-in; all data stays on the device. (Changed 2026-10-05 from the original public, multi-user plan.)
 
-**Every user starts fresh.** No seeded data, no demo orders, no pre-filled names. A new account opens on the Empty state, and the user logs orders one at a time. The experience of watching the app learn (Learning state → predictions unlocking at 6 orders) is a core part of the product, so never shortcut it with sample data in the real app.
+**The app starts fresh.** No seeded data, no demo orders, no pre-filled names. A fresh install opens on the Empty state, and the user logs orders one at a time. The experience of watching the app learn (Learning state → predictions unlocking at 6 orders) is a core part of the product, so never shortcut it with sample data in the real app.
 
 ## Design source of truth
 
@@ -56,9 +56,9 @@ Use the Figma MCP (`get_design_context`, `get_screenshot`, `get_variable_defs`) 
 
 - **Frontend:** Vite + React + TypeScript, Tailwind using CSS variables from the tokens below. Mobile-first (designed at 375 × 812) and installable as a PWA.
 - **Hosting:** GitHub → **Cloudflare Pages**. Do not use Netlify, in config, docs or tooling.
-- **Server code:** **Cloudflare Pages Functions** (`/functions/api/*`). Secrets are set with `wrangler pages secret put` and are never in the repo or client bundle.
-- **Data and auth:** Supabase (Postgres + magic-link email auth). Every table is scoped by `user_id` with row-level security, since this is a multi-user public app. (Alternative to discuss: Cloudflare D1 plus a separate auth provider, to keep everything on Cloudflare.)
-- **AI parsing:** a Pages Function that calls the Claude API, model `claude-haiku-4-5-20251001` (fast and cheap, good enough for parsing). Rate-limit it per user.
+- **Data:** local only. Everything lives in the browser's `localStorage` (`src/lib/store/local.ts`); no server database, no auth. Because the device holds the only copy, the app has **Backup and settings** (save a backup file, restore from one, erase everything) and **Delete order**. Installing as a PWA matters: iOS Safari clears data for sites not added to the Home Screen after 7 days unused.
+- **Parsing:** the rule-based reader (`src/lib/parse-local.ts`) by default, offline and free.
+- **AI parsing (optional, undecided):** a Pages Function (`/functions/api/parse-order`) calling the Claude API, model `claude-haiku-4-5-20251001`. Only used when the build sets `VITE_AI_PARSING=on`. With no sign-in the endpoint is open to anyone, so protect it before setting `ANTHROPIC_API_KEY` in production. Secrets are set with `wrangler pages secret put` and are never in the repo or client bundle.
 
 ## Design tokens
 
@@ -97,15 +97,17 @@ Expose these as CSS variables with the same names as the Figma variables (e.g. `
 
 ## Data model
 
+Stored as one JSON document in `localStorage`. The backup file is the same data wrapped as `{ app: "beli-grocery", version: 1, exported_at, data }`.
+
 ```
-profiles        id, user_id, shopping_for (text, the name the user gives),
+profile         id, shopping_for (text, the name the user gives),
                 cadence_days (int, default 14), created_at
 
-items           id, user_id, canonical_name, category
+items           id, canonical_name, category
                 (protein | produce | dairy | pantry), aliases text[],
                 created_at
 
-orders          id, user_id, order_date (date), total_rm (numeric, nullable),
+orders          id, order_date (date), total_rm (numeric, nullable),
                 raw_text, created_at
 
 order_items     id, order_id, item_id, quantity (numeric),
@@ -114,9 +116,9 @@ order_items     id, order_id, item_id, quantity (numeric),
                 raw_line
 ```
 
-`items` is each user's own catalogue, starting empty and growing as they log orders. Every order line resolves to an item, which is how "telor" and "telur" or "Milo medium" and "milo" count as the same thing. When the user fixes a match, add that raw text to `aliases`.
+`items` is the catalogue, starting empty and growing as they log orders. Every order line resolves to an item, which is how "telor" and "telur" or "Milo medium" and "milo" count as the same thing. When the user fixes a match, add that raw text to `aliases`.
 
-## Parsing (Pages Function: `/api/parse-order`)
+## Parsing (rule-based by default; optional Pages Function: `/api/parse-order`)
 
 **Input:** `{ raw_text, catalogue: [{id, canonical_name, aliases, category}] }` (the catalogue is empty for a brand-new user)
 
@@ -210,14 +212,14 @@ Margarine Planta x 1 pek
 ## Milestones (build in order, one at a time; stop for review after each)
 
 1. **Scaffold and tokens:** Vite, Tailwind and tokens; the six components built to match Figma; a `/dev/components` page showing them; deploys to Cloudflare Pages.
-2. **Supabase:** schema, row-level security, magic-link auth, and the Setup flow (Welcome → Who → How often → Past orders, defaulting to Start fresh).
-3. **Log an order:** Paste → Reading → Review → Saved, with the `/api/parse-order` function.
+2. **Data and Setup:** local storage (originally Supabase; replaced 2026-10-05), and the Setup flow (Welcome → Who → How often → Past orders, defaulting to Start fresh).
+3. **Log an order:** Paste → Reading → Review → Saved, with the rule-based reader (AI optional).
 4. **Home and History:** the three Home states (Empty, Learning, Ready), Order history, Order detail, Item detail.
 5. **Predictions and Order day:** `predict.ts` with tests, Draft next order, Copy for WhatsApp, the log-it-now loop.
-6. **Ship v1:** production Cloudflare Pages deploy, secrets, custom domain, PWA manifest and icon.
-7. **Bulk import (post-v1):** Bulk import → Review import, for users who arrive with order history.
+6. **Ship v1:** production Cloudflare Pages deploy, custom domain, PWA manifest and icon (needed so data isn't cleared on iPhone).
+7. **Bulk import (post-v1):** Bulk import → Review import, for loading order history.
 
-**Out of scope for v1:** Insights screen, bulk import, dark mode, multiple people per account, price tracking per item, notifications.
+**Out of scope for v1:** Insights screen, bulk import, dark mode, accounts or sync across devices, multiple people, price tracking per item, notifications.
 
 ## Conventions
 
@@ -225,11 +227,11 @@ Margarine Planta x 1 pek
 - Dates: `3 Oct 2026` in lists, `Sat, 17 Oct` for the next order.
 - UI copy in English; item names in whatever the user typed.
 - Accessibility: tap targets ≥ 44px, visible focus states, WCAG AA contrast on all text.
-- Never put the Claude API key or Supabase service key in client code.
+- Never put the Claude API key in client code.
 - Keep components small and typed. No component library: build from the Figma components.
 
 ## Open decisions (ask when relevant)
 
 - Categories: four for now (Protein, Produce, Dairy, Pantry). Telor is under Dairy and Milo under Pantry. Possible fifth group: Drinks or Frozen.
-- Data layer: Supabase (default) or Cloudflare D1 plus separate auth.
+- AI parsing: keep it (and add endpoint protection) or stay rule-based only.
 - Domain for Beli Grocery (possibly under Kasah Kod).

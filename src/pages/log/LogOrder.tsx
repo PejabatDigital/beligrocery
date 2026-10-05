@@ -10,7 +10,7 @@ import { TopBar } from '../../components/layout/TopBar'
 import { CATEGORIES, CATEGORY_LABELS } from '../../lib/categories'
 import { formatDate, isValidISODate, todayISO } from '../../lib/dates'
 import { formatQuantity, formatRM, formatTrailing, plural, possessive } from '../../lib/format'
-import { ParseError, parseOrderText } from '../../lib/parse-client'
+import { AI_ENABLED, ParseError, parseOrderText } from '../../lib/parse-client'
 import { parseLocal } from '../../lib/parse-local'
 import type { DraftLine, ISODate } from '../../lib/types'
 import { fromDraft, fromParsed, isResolved, lineCategory, toDraftLine, type ReviewLine } from './reviewLines'
@@ -41,7 +41,7 @@ export function LogOrder() {
     setPasteError(null)
     setStep('reading')
     try {
-      const { result, usedAI } = await parseOrderText(data.store, text, data.catalogue)
+      const { result, usedAI } = await parseOrderText(text, data.catalogue)
       const [order] = result.orders
       if (!order || order.items.length === 0) {
         setPasteError("Couldn't find any items. Put one item on each line.")
@@ -52,7 +52,7 @@ export function LogOrder() {
       if (!order.order_date) found.push("No date in the list, so it's set to today. Tap the date to change it.")
       if (order.total_rm == null) found.push('No total in the list. Add it above if you know it.')
       if (result.orders.length > 1) found.push('This looks like more than one order. Only the first one was read.')
-      if (!usedAI && data.store.mode !== 'local') found.push('Read without AI this time, so check the items carefully.')
+      if (!usedAI && AI_ENABLED) found.push('Read without AI this time, so check the items carefully.')
       setLines(fromParsed(order.items, data.catalogue))
       setDate(order.order_date ?? todayISO())
       setTotal(order.total_rm != null ? order.total_rm.toFixed(2) : '')

@@ -1,15 +1,14 @@
 import { useMemo } from 'react'
 import { daysBetween, monthKey, todayISO } from '../lib/dates'
 import { itemStats, predict } from '../lib/predict'
-import type { Store } from '../lib/store'
 import type { CatalogueEntry, Item } from '../lib/types'
 import { useDataContext } from './DataProvider'
 
-/** Signed-in data plus everything derived from it. Only use under <RequireReady>. */
+/** The saved data plus everything derived from it. Only use under <RequireProfile>. */
 export function useAppData() {
   const { state, store, refresh } = useDataContext()
-  if (state.status !== 'ready' || !store) throw new Error('useAppData before data is ready')
-  const { profile, items, orders, session } = state
+  if (state.status !== 'ready') throw new Error('useAppData before data is ready')
+  const { profile, items, orders } = state
   const cadence = profile?.cadence_days ?? 14
 
   const derived = useMemo(() => {
@@ -29,9 +28,8 @@ export function useAppData() {
   }, [items, orders, cadence])
 
   return {
-    store: store as Store,
+    store,
     refresh,
-    session,
     profile,
     items,
     orders,
