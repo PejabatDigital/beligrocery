@@ -1,0 +1,39 @@
+{
+  "name": "beli-grocery",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "pages:deploy": "npm run build && wrangler pages deploy dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev:api": "wrangler pages dev public --port 8788",
+    "dev:all": "concurrently -k -n web,api \"npm:dev\" \"npm:dev:api\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@supabase/supabase-js": "^2.117.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261003.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.147.0"
+  }
+}

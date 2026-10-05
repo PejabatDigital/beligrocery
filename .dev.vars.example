@@ -1,0 +1,5 @@
+# Copy to .dev.vars for `npm run dev:api`. Never commit .dev.vars.
+# In production set these with: npx wrangler pages secret put <NAME>
+ANTHROPIC_API_KEY=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=

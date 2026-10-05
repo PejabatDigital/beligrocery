@@ -1,0 +1,152 @@
+/*
+ * Beli Grocery design tokens.
+ * Source of truth: Figma › Foundations (file GU3YYQcFRcSU5KRWmwE0RC).
+ * Semantic variable names match the Figma variables exactly (e.g. --color-bg-brand),
+ * so each one maps to a Tailwind utility: --color-bg-brand → bg-bg-brand,
+ * --color-text-primary → text-text-primary, --spacing-lg → p-lg, --radius-md → rounded-md.
+ */
+
+/* Primitives: referenced by semantic tokens only. Don't use these in components. */
+:root {
+  --cream-50: #fbf7f0;
+  --cream-100: #f4ede1;
+  --cream-200: #e8dcc8;
+
+  --ink-300: #b5ac9e;
+  /* Figma has #7A7266, which is 4.08–4.44:1 on canvas/subtle/brand-subtle. Darkened slightly to
+     meet WCAG AA (4.5:1) on every background it's used on. Update Figma to match, or revert. */
+  --ink-500: #736b5f;
+  --ink-700: #4a453d;
+  --ink-900: #22201c;
+
+  --pandan-50: #eaf3ec;
+  --pandan-100: #cfe5d4;
+  --pandan-500: #2f7d4f;
+  --pandan-700: #1f5a38;
+
+  --chili-50: #fcebe7;
+  --chili-500: #d9472b;
+  --chili-700: #a8321c;
+
+  --kunyit-50: #fdf4dc;
+  --kunyit-500: #e8a317;
+  --kunyit-700: #8a5e05;
+
+  --sky-50: #e6f0f8;
+  --sky-500: #3e7cb1;
+  --sky-700: #285880;
+
+  --white: #ffffff;
+}
+
+@theme static {
+  /* Drop Tailwind's default palette and radii so only design tokens are available. */
+  --color-*: initial;
+  --radius-*: initial;
+  --font-*: initial;
+
+  /* Semantic colours: light mode only for v1 */
+  --color-bg-canvas: var(--cream-50);
+  --color-bg-surface: var(--white);
+  --color-bg-subtle: var(--cream-100);
+  --color-bg-brand: var(--pandan-500);
+  --color-bg-brand-subtle: var(--pandan-50);
+  --color-bg-accent: var(--chili-500);
+  --color-bg-accent-subtle: var(--chili-50);
+  --color-bg-warning-subtle: var(--kunyit-50);
+  --color-bg-info-subtle: var(--sky-50);
+
+  --color-text-primary: var(--ink-900);
+  --color-text-secondary: var(--ink-500);
+  --color-text-on-brand: var(--white);
+  --color-text-brand: var(--pandan-700);
+  --color-text-accent: var(--chili-700);
+  --color-text-warning: var(--kunyit-700);
+  --color-text-info: var(--sky-700);
+
+  --color-border-default: var(--cream-200);
+  --color-border-strong: var(--ink-300);
+  --color-border-brand: var(--pandan-500);
+
+  --color-category-protein: var(--chili-500);
+  --color-category-produce: var(--pandan-500);
+  --color-category-dairy: var(--sky-500);
+  --color-category-pantry: var(--kunyit-500);
+
+  /* Spacing (Tailwind's numeric scale stays available for one-offs like h-11 = 44px) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* Fonts */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* Type styles: one utility per Figma text style */
+@utility type-display {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 0, 'WONK' 1;
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 38px;
+  letter-spacing: -0.01em;
+}
+@utility type-title {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 0, 'WONK' 1;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 30px;
+  letter-spacing: -0.005em;
+}
+@utility type-heading {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 24px;
+}
+@utility type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 22px;
+}
+@utility type-body-strong {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 22px;
+}
+@utility type-caption {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+}
+@utility type-label {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+@utility type-number {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
